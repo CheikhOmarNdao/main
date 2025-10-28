@@ -13,3 +13,5 @@ class Inventaire:
             self.cles += 1
         elif objet.nom == "pas":
             self.pas += objet.valeur
+
+print("maysa baye")
