@@ -7,6 +7,7 @@ class Inventaire:
         self.des = des
         self.permanents = permanents if permanents else set()
 
+<<<<<<< HEAD
     def depenser_pas(self, n=1):
         if self.pas >= n:
             self.pas -= n
@@ -15,3 +16,14 @@ class Inventaire:
 
     def afficher(self):
         return f"Pas: {self.pas} | Or: {self.or_} | Gemmes: {self.gemmes} | Clés: {self.cles} | Dés: {self.des}"
+=======
+    def ajouter_objet(self, objet):
+        if objet.type == "permanent":
+            self.objets_permanents.add(objet.nom)
+        elif objet.nom == "clé":
+            self.cles += 1
+        elif objet.nom == "pas":
+            self.pas += objet.valeur
+
+print("maysa baye")
+>>>>>>> 7c2f297b90d267df6b41ae4bfe755ca221c13b63
