@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Affichage : grille, HUD, menu + flèche de direction du joueur.
-Fond noir initial + cases non explorées en gris foncé.
+Fond entièrement noir au départ, cases non utilisées aussi noires.
 """
 
 import os
@@ -35,15 +35,14 @@ class Vue:
         self.taille_case = 80
         self.police = pygame.font.SysFont("Arial", 20)
 
+        # Couleurs utilisées
         self.couleurs = {
             "bleue": (80, 150, 255), "orange": (255, 160, 70), "verte": (80, 200, 120),
             "violette": (180, 100, 255), "jaune": (250, 230, 100), "rouge": (230, 80, 80),
-            "gris": (200, 200, 200), "gris_fonce": (60, 60, 60)
+            "gris": (200, 200, 200), "noir": (0, 0, 0)
         }
 
-        self.direction = "droite"   # direction affichée par la flèche
-
-        # cache d’images
+        self.direction = "droite"  # direction affichée par la flèche
         self._sprites = {}
         self._charger_images(dossier_images)
 
@@ -52,7 +51,7 @@ class Vue:
         if d in ("haut", "bas", "gauche", "droite"):
             self.direction = d
 
-    # --- assets ---
+    # --- gestion des images ---
     @staticmethod
     def _norm(nom: str) -> str:
         return "".join(ch.lower() for ch in nom if ch.isalnum())
@@ -83,15 +82,16 @@ class Vue:
                 return surf
         return None
 
-    # --- rendu ---
+    # --- affichage global ---
     def render(self):
-        # fond noir initial
-        self.ecran.fill((0, 0, 0))
+        # Fond noir intégral
+        self.ecran.fill(self.couleurs["noir"])
         self.afficher_grille()
         self.afficher_joueur()
         self.afficher_hud()
         pygame.display.flip()
 
+    # --- affichage de la grille ---
     def afficher_grille(self):
         for i in range(self.manoir.lignes):
             for j in range(self.manoir.colonnes):
@@ -103,22 +103,22 @@ class Vue:
                     self.taille_case
                 )
 
-                # Dessin bordure
-                pygame.draw.rect(self.ecran, (0, 0, 0), rect, 2)
-
-                # Si la case est vide ou non explorée
+                # Si la case n’a pas encore été utilisée → reste noire
                 if not piece or not piece.get("type"):
-                    pygame.draw.rect(self.ecran, self.couleurs["gris_fonce"], rect.inflate(-4, -4))
+                    pygame.draw.rect(self.ecran, self.couleurs["noir"], rect)
+                    pygame.draw.rect(self.ecran, (40, 40, 40), rect, 1)  # léger contour
                     continue
 
-                # Sinon, dessiner la pièce (sprite ou couleur)
+                # Sinon, afficher la pièce (sprite ou couleur)
                 sp = self._sprite_pour_type(piece.get("type", ""))
-                if sp is not None:
+                if sp:
                     self.ecran.blit(sp, rect.topleft)
                 else:
                     couleur = self.couleurs.get(piece.get("couleur", "gris"), (220, 220, 220))
                     pygame.draw.rect(self.ecran, couleur, rect.inflate(-4, -4))
+                    pygame.draw.rect(self.ecran, (0, 0, 0), rect, 1)
 
+    # --- affichage du joueur ---
     def afficher_joueur(self):
         rect = pygame.Rect(
             self.joueur["y"] * self.taille_case + 10,
@@ -128,22 +128,21 @@ class Vue:
         )
         pygame.draw.rect(self.ecran, (0, 0, 255), rect)
 
-        # --- flèche de direction ---
-        cx = rect.centerx
-        cy = rect.centery
-        t = 12  # taille du triangle
+        # Flèche de direction du joueur
+        cx, cy = rect.center
+        t = 12
         if self.direction == "haut":
             pts = [(cx, cy - t - 10), (cx - t, cy - 10), (cx + t, cy - 10)]
         elif self.direction == "bas":
             pts = [(cx, cy + t + 10), (cx - t, cy + 10), (cx + t, cy + 10)]
         elif self.direction == "gauche":
             pts = [(cx - t - 10, cy), (cx - 10, cy - t), (cx - 10, cy + t)]
-        else:  # droite
+        else:
             pts = [(cx + t + 10, cy), (cx + 10, cy - t), (cx + 10, cy + t)]
 
-        pygame.draw.polygon(self.ecran, (30, 30, 30), pts)
-        pygame.draw.polygon(self.ecran, (250, 250, 0), pts, 2)
+        pygame.draw.polygon(self.ecran, (255, 255, 0), pts)
 
+    # --- affichage du HUD ---
     def afficher_hud(self):
         barre = pygame.Rect(
             0,
@@ -155,6 +154,7 @@ class Vue:
         texte = self.police.render(self.inventaire.afficher(), True, (0, 0, 0))
         self.ecran.blit(texte, (10, self.manoir.lignes * self.taille_case + 20))
 
+    # --- affichage du menu de choix de pièces ---
     def afficher_menu_choix(self, options):
         self.ecran.fill((0, 0, 0))
         y0 = 50
@@ -169,13 +169,14 @@ class Vue:
                 self.ecran.blit(vignette, (40, y0 + i * 80 - 10))
         pygame.display.flip()
 
+    # --- affichage de fin de partie ---
     def afficher_fin(self, message, perdu=False, gagne=False):
         if perdu:
             couleur_fond = self.couleurs["rouge"]
         elif gagne:
             couleur_fond = self.couleurs["verte"]
         else:
-            couleur_fond = (0, 0, 0)
+            couleur_fond = self.couleurs["noir"]
 
         self.ecran.fill(couleur_fond)
         texte = self.police.render(message, True, (255, 255, 255))
