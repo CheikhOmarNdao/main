@@ -70,10 +70,23 @@ class Vue:
             self.ecran.blit(texte, (50, 50 + i * 40))
         pygame.display.flip()
 
-    def afficher_fin(self, message):
-        self.ecran.fill((0, 0, 0))
+    def afficher_fin(self, message, perdu=False, gagne=False):
+        # Détermination de la couleur de fond
+        if perdu:
+            couleur_fond = self.couleurs["rouge"]     # Rouge pour défaite
+        elif gagne:
+            couleur_fond = self.couleurs["verte"]     # Vert pour victoire
+        else:
+            couleur_fond = (0, 0, 0)                  # Noir par défaut
+
+        # Remplissage de l'écran
+        self.ecran.fill(couleur_fond)
+
+        # Rendu du texte
         texte = self.police.render(message, True, (255, 255, 255))
         rect = texte.get_rect(center=(self.ecran.get_width() // 2, self.ecran.get_height() // 2))
+
+        # Affichage du texte
         self.ecran.blit(texte, rect)
         pygame.display.flip()
         pygame.time.wait(3000)

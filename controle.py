@@ -30,3 +30,4 @@ class Controleur:
                 elif event.key == pygame.K_r: actions["reroll"] = True
         return actions
 
+
