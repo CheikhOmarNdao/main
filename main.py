@@ -5,7 +5,7 @@ import random
 from catalogue import charger_catalogue, construire_pool
 from inventaire import Inventaire
 from manoir import Manoir
-from affich_graph import Vue
+from affich_graph import Vuehon 
 from controle import Controleur
 from effets import appliquer_effet, Contexte
 
