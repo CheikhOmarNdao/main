@@ -1,50 +1,32 @@
+# -*- coding: utf-8 -*-
 
 class Inventaire:
-    """Classe gérant les ressources du joueur."""
+    def __init__(self, pas=75, or_=0, gemmes=2, cles=0, des=1, bananes=0):
+        # consommables
+        self.pas = int(pas)
+        self.or_ = int(or_)
+        self.gemmes = int(gemmes)
+        self.cles = int(cles)
+        self.des = int(des)
+        self.bananes = int(bananes)
 
-    def __init__(self, pas=70, or_=0, gemmes=2, cles=0, des=0, permanents=None):
-        self.pas = pas
-        self.or_ = or_
-        self.gemmes = gemmes
-        self.cles = cles
-        self.des = des
-        self.permanents = permanents if permanents else set()
+        # permanents (bool)
+        self.pelle = False
+        self.marteau = False
+        self.kit_crochetage = False
+        self.detecteur_metaux = False
+        self.patte_lapin = False
 
-    # ---- Méthodes d’ajout ----
-    def ajouter_pas(self, n):
-        self.pas += n
-
-    def ajouter_or(self, n):
-        self.or_ += n
-
-    def ajouter_gemmes(self, n):
-        self.gemmes += n
-
-    def ajouter_cles(self, n):
-        self.cles += n
-
-    def ajouter_des(self, n):
-        self.des += n
-
-    def ajouter_permanent(self, nom):
-        self.permanents.add(nom)
-
-    # ---- Méthodes de dépense ----
+    # ---- dépenses (consommables)
     def depenser_pas(self, n=1):
         if self.pas >= n:
             self.pas -= n
             return True
         return False
 
-    def depenser_gemmes(self, n):
+    def depenser_gemmes(self, n=1):
         if self.gemmes >= n:
             self.gemmes -= n
-            return True
-        return False
-
-    def depenser_cles(self, n=1):
-        if self.cles >= n:
-            self.cles -= n
             return True
         return False
 
@@ -54,35 +36,39 @@ class Inventaire:
             return True
         return False
 
+    # ---- gains (consommables)
+    def ajouter_pas(self, n=1): self.pas += n
+    def ajouter_or(self, n=1): self.or_ += n
+    def ajouter_gemmes(self, n=1): self.gemmes += n
+    def ajouter_cles(self, n=1): self.cles += n
+    def ajouter_des(self, n=1): self.des += n
+    def ajouter_bananes(self, n=1): self.bananes += n
+
+    # ---- permanents
+    def donner_permanent(self, nom: str) -> bool:
+        nom = (nom or "").strip().lower()
+        if nom == "pelle" and not self.pelle:
+            self.pelle = True; return True
+        if nom == "marteau" and not self.marteau:
+            self.marteau = True; return True
+        if nom == "kit de crochetage" and not self.kit_crochetage:
+            self.kit_crochetage = True; return True
+        if nom == "détecteur de métaux" and not self.detecteur_metaux:
+            self.detecteur_metaux = True; return True
+        if nom == "patte de lapin" and not self.patte_lapin:
+            self.patte_lapin = True; return True
+        return False
+
+    def liste_permanents(self):
+        lst = []
+        if self.kit_crochetage: lst.append("Lockpick Kit")
+        if self.patte_lapin:    lst.append("Lucky Rabbit's Foot")
+        if self.pelle:          lst.append("Shovel")
+        if self.marteau:        lst.append("Hammer")
+        if self.detecteur_metaux: lst.append("Metal Detector")
+        return lst
+
+    # ---- affichage HUD (consommables à droite)
     def afficher(self):
-        """Retourne une chaîne formatée de l'état de l'inventaire."""
-        return (
-            f"Pas: {self.pas} | Or: {self.or_} | Gemmes: {self.gemmes} | "
-            f"Clés: {self.cles} | Dés: {self.des}"
-        )
-
-if __name__ == "__main__":
-    inv = Inventaire()
-
-    print("=== Inventaire initial ===")
-    print(inv.afficher())
-
-    print("\n--- Ajouts ---")
-    inv.ajouter_or(50)
-    inv.ajouter_gemmes(3)
-    inv.ajouter_cles(1)
-    inv.ajouter_des(2)
-    inv.ajouter_permanent("Carte magique")
-
-    print(inv.afficher())
-
-    print("\n--- Dépenses ---")
-    inv.depenser_pas(5)
-    inv.depenser_gemmes(2)
-    inv.depenser_cles()
-    inv.depenser_des()
-
-    print(inv.afficher())
-
-    print("\nObjets permanents :", inv.permanents)
-    
+        return (f"Pas: {self.pas} | Or: {self.or_} | Gemmes: {self.gemmes} | "
+                f"Clés: {self.cles} | Dés: {self.des} | Bananes: {self.bananes}")
