@@ -5,6 +5,7 @@ manoir
 - Portes (niveaux 0/1/2)
 - Déplacements, ouverture (prépare 3 options), placement d'une pièce
 """
+from inventaire import Inventaire
 
 from typing import List, Dict, Tuple
 import random
@@ -16,11 +17,11 @@ Piece = Dict[str, object]       #dictionnaire représentant une pièce
 
 class Manoir:
     #Grille, portes et actions de base
-
-    def __init__(self, lignes: int = 5, colonnes: int = 9, pool=None, rng=None):
+  
+    def __init__(self, lignes: int = 5, colonnes: int = 9, pool=None, rng=None, inventaire=None):
         self.lignes = lignes
         self.colonnes = colonnes
-
+        self.inventaire = inventaire
         # Pioche et RNG
         self.pool = pool or []      # liste de dicts pièce
         self.rng = rng or random.Random()       #générateur aléatoire
@@ -68,18 +69,27 @@ class Manoir:
         #Niveau de la porte (0,1,2)
         return int(self.portes.get(direction, 0))
 
-    def peut_ouvrir(self, joueur: Dict[str, int], direction: Direction) -> bool:
-        #on peut ouvrir si la case visée existe dans la grille
+    def peut_ouvrir(self, joueur: Dict[str, int], direction: Direction, inventaire: Inventaire) -> bool:
+
         dx, dy = self._delta(direction)
         nx, ny = joueur["x"] + dx, joueur["y"] + dy
-        return self._dans_grille(nx, ny)
+        if not self._dans_grille(nx, ny):
+           return False
 
-    def ouvrir(self, joueur: Dict[str, int], direction: Direction) -> None:
-        #Ouvre la porte et prépare trois options de pièces via tirages.tirer_trois
-        if not self.peut_ouvrir(joueur, direction):
+        niveau = self.portes.get(direction, 0)
+        if niveau == 1 and "kitdecrochetage" in inventaire.permanents:
+           return True
+        if niveau == 2:
+           return inventaire.cles >= 1
+        return True  # niveau 0 ou clé disponible
+
+    def ouvrir(self, joueur: Dict[str, int], direction: Direction, inventaire: Inventaire) -> None:
+        if not self.peut_ouvrir(joueur, direction, inventaire):
             self.options_courantes = []
             return
         self.options_courantes = tirer_trois(self.pool, self.rng)
+ 
+
 
     #Placement d’une pièce
     def _case_devant(self, joueur: Dict[str, int], direction: Direction) -> Tuple[int, int]:

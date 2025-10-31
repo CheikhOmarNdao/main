@@ -1,120 +1,80 @@
-# -*- coding: utf-8 -*-
-"""
-Boucle principale (MVP) :
-- Z/Q/S/D : déplacement (–1 pas)
-- Flèches : tourner (met la direction sans bouger)
-- ESPACE  : ouvrir (passe au menu de choix)
-- 1/2/3/Entrée : choisir une option
-- R : reroll pendant le menu (–1 dé)
-"""
-
-import random
+# # -*- coding: utf-8 -*-
 import pygame
+import random
 
-from affich_graph import Vue
-from controle import Controleur
+from catalogue import charger_catalogue, construire_pool
 from inventaire import Inventaire
 from manoir import Manoir
-from tirages import tirer_trois
-# from effets import appliquer_effet, Contexte  # si tu veux appliquer des effets à la pose
+from affich_graph import Vue
+from controle import Controleur
+from effets import appliquer_effet, Contexte
 
-POOL = [
-    {"type": "Galerie",       "couleur": "verte",    "rarete": 1, "cout_gemmes": 0},
-    {"type": "Garage",        "couleur": "jaune",    "rarete": 2, "cout_gemmes": 1},
-    {"type": "Observatoire",  "couleur": "violette", "rarete": 3, "cout_gemmes": 2},
-    {"type": "Serre",         "couleur": "verte",    "rarete": 1, "cout_gemmes": 0},
-    {"type": "Cuisine",       "couleur": "orange",   "rarete": 1, "cout_gemmes": 0},
-    {"type": "Bibliotheque",  "couleur": "bleue",    "rarete": 2, "cout_gemmes": 1},
-]
+# --- Initialisation Pygame ---
+pygame.init()
+TAILLE_CASE = 80
+LIGNES, COLONNES = 5, 9
+LARGEUR = COLONNES * TAILLE_CASE
+HAUTEUR = LIGNES * TAILLE_CASE + 60
+ecran = pygame.display.set_mode((LARGEUR, HAUTEUR))
+pygame.display.set_caption("Exploration du Manoir")
 
-def main():
-    pygame.init()
-    pygame.display.set_caption("Blue Prince — MVP")
+# --- Chargement du catalogue ---
+catalogue = charger_catalogue("catalogue.json")  # ou .yaml
+pool = construire_pool(catalogue, multiplicateur=2)
+rng = random.Random()
 
-    rng = random.Random()
-    inventaire = Inventaire(pas=75, or_=0, gemmes=2, cles=0, des=1)
-    manoir = Manoir(lignes=5, colonnes=9, pool=POOL, rng=rng)
-    joueur = manoir.joueur
+# --- Création des objets principaux ---
+inventaire = Inventaire()
+manoir = Manoir(lignes=LIGNES, colonnes=COLONNES, pool=pool, rng=rng, inventaire=Inventaire)
+vue = Vue(ecran, manoir, manoir.joueur, inventaire)
+controleur = Controleur(manoir.joueur, inventaire, manoir)
 
-    TCASE, H_HUD = 80, 60
-    largeur = manoir.colonnes * TCASE
-    hauteur = manoir.lignes * TCASE + H_HUD
-    ecran = pygame.display.set_mode((largeur, hauteur))
+# --- Boucle principale ---
+clock = pygame.time.Clock()
+etat_menu = False
+running = True
 
-    vue = Vue(ecran, manoir, joueur, inventaire, dossier_images="image_pieces")
-    controleur = Controleur(joueur, inventaire, manoir)
-    clock = pygame.time.Clock()
+while running:
+    actions = controleur.handle_events()
+    if actions == "quitter":
+        break
 
-    etat = "jeu"                 # "jeu" / "choix"
-    direction_ouverte = "droite"
+    # --- Tourner (flèches) ---
+    if actions["tourner"]:
+        vue.set_direction(actions["tourner"])
 
-    running = True
-    while running:
-        actions = controleur.handle_events()
-        if actions == "quitter":
-            break
+    # --- Déplacement (ZQSD) ---
+    if actions["move"]:
+        vue.set_direction(actions["move"])
+        manoir.deplacer(manoir.joueur, actions["move"])
 
-        # ===================== ETAT CHOIX =====================
-        if etat == "choix":
+    # --- Ouverture de porte ---
+    if actions["ouvrir"]:
+        manoir.ouvrir(manoir.joueur, vue.direction, inventaire)
+        if manoir.options_courantes:
+            etat_menu = True
             vue.afficher_menu_choix(manoir.options_courantes)
 
-            idx = actions.get("choix_index")
-            if idx is not None and 0 <= idx < len(manoir.options_courantes):
-                piece = manoir.options_courantes[idx]
-                cout = int(piece.get("cout_gemmes", 0))
-                if cout <= inventaire.gemmes and inventaire.depenser_gemmes(cout):
-                    x, y = manoir._case_devant(joueur, direction_ouverte)
-                    ok = manoir.poser_piece(x, y, piece)
-                    print(f"[LOG] Pose {piece.get('type')} à {(x, y)} => {ok}, coût {cout} gemme(s)")
-                    if ok:
-                        # # Optionnel: appliquer l'effet
-                        # ctx = Contexte(inventaire=inventaire, manoir=manoir)
-                        # msg = appliquer_effet(piece, ctx)
-                        # print("[EFFET]", msg)
-                        manoir.options_courantes = []
-                        etat = "jeu"
-                else:
-                    print("[WARN] Gemmes insuffisantes pour cette option.")
+    # --- Reroll des options ---
+    if actions["reroll"] and etat_menu:
+        manoir.options_courantes = manoir.rng.sample(pool, 3)
+        vue.afficher_menu_choix(manoir.options_courantes)
 
-            if actions.get("reroll"):
-                if inventaire.depenser_des(1):
-                    manoir.options_courantes = tirer_trois(POOL, rng)
-                    print("[LOG] Reroll des options (–1 dé).")
-                else:
-                    print("[WARN] Aucun dé disponible pour reroll.")
+    # --- Choix d’une pièce ---
+    if actions["choix_index"] is not None and etat_menu:
+        i = actions["choix_index"]
+        if 0 <= i < len(manoir.options_courantes):
+            piece = manoir.options_courantes[i]
+            if inventaire.depenser_gemmes(piece.get("cout_gemmes", 0)):
+                if manoir.poser_devant(manoir.joueur, vue.direction, piece):
+                    effet = appliquer_effet(piece, Contexte(inventaire, manoir))
+                    print("Effet appliqué :", effet)
+        etat_menu = False
 
-            clock.tick(60)
-            continue  # ne pas dessiner la grille ici
-
-        # ===================== ETAT JEU =====================
-        # Tourner avec les flèches (ne bouge pas)
-        if actions.get("tourner"):
-            direction_ouverte = actions["tourner"]
-
-        # Déplacement (ZQSD) — consomme 1 pas
-        if actions.get("move"):
-            d = actions["move"]
-            if inventaire.depenser_pas(1) and manoir.peut_deplacer(joueur, d):
-                manoir.deplacer(joueur, d)
-                direction_ouverte = d
-            else:
-                print("[WARN] Mouvement impossible ou plus de pas.")
-
-        # Ouverture (ESPACE) -> menu
-        if actions.get("ouvrir"):
-            if manoir.peut_ouvrir(joueur, direction_ouverte):
-                manoir.options_courantes = tirer_trois(POOL, rng)
-                etat = "choix"
-                print(f"[LOG] Ouverture vers {direction_ouverte} → {len(manoir.options_courantes)} options.")
-            else:
-                print("[WARN] Hors de la grille : impossible d’ouvrir ici.")
-
-        # MAJ direction dans la Vue + rendu
-        vue.set_direction(direction_ouverte)
+    # --- Affichage principal ---python
+    if not etat_menu:
         vue.render()
-        clock.tick(60)
 
-    pygame.quit()
+    clock.tick(30)
 
-if __name__ == "__main__":
-    main()
+pygame.quit()

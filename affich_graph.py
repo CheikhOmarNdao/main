@@ -1,28 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-Affichage : grille, HUD, menu + flèche de direction du joueur.
-Fond entièrement noir au départ, cases non utilisées aussi noires.
-"""
-
 import os
 import glob
 import pygame
-
-ALIAS_SPRITES = {
-    "serre": "greenhouse",
-    "observatoire": "observatory",
-    "galerie": "gallery",
-    "garage": "garage",
-    "bibliotheque": "library",
-    "cuisine": "kitchen",
-    "couloir": "passageway",
-    "salleamanger": "diningroom",
-    "chambre": "bedroom",
-    "atelier": "workshop",
-    "patio": "patio",
-    "foyer": "foyer",
-}
-
 
 class Vue:
     """Classe responsable de l'affichage graphique du manoir et de l'inventaire."""
@@ -35,23 +14,20 @@ class Vue:
         self.taille_case = 80
         self.police = pygame.font.SysFont("Arial", 20)
 
-        # Couleurs utilisées
         self.couleurs = {
             "bleue": (80, 150, 255), "orange": (255, 160, 70), "verte": (80, 200, 120),
             "violette": (180, 100, 255), "jaune": (250, 230, 100), "rouge": (230, 80, 80),
             "gris": (200, 200, 200), "noir": (0, 0, 0)
         }
 
-        self.direction = "droite"  # direction affichée par la flèche
+        self.direction = "droite"
         self._sprites = {}
         self._charger_images(dossier_images)
 
-    # --- direction (appelée depuis main) ---
     def set_direction(self, d: str):
         if d in ("haut", "bas", "gauche", "droite"):
             self.direction = d
 
-    # --- gestion des images ---
     @staticmethod
     def _norm(nom: str) -> str:
         return "".join(ch.lower() for ch in nom if ch.isalnum())
@@ -71,45 +47,31 @@ class Vue:
 
     def _sprite_pour_type(self, type_piece: str):
         k = self._norm(type_piece)
-        if k in ALIAS_SPRITES:
-            alias_k = self._norm(ALIAS_SPRITES[k])
-            if alias_k in self._sprites:
-                return self._sprites[alias_k]
         if k in self._sprites:
             return self._sprites[k]
         for cle, surf in self._sprites.items():
-            if k and k in cle:
+            if k in cle:
                 return surf
         return None
 
-    # --- affichage global ---
     def render(self):
-        # Fond noir intégral
         self.ecran.fill(self.couleurs["noir"])
         self.afficher_grille()
         self.afficher_joueur()
         self.afficher_hud()
         pygame.display.flip()
 
-    # --- affichage de la grille ---
     def afficher_grille(self):
         for i in range(self.manoir.lignes):
             for j in range(self.manoir.colonnes):
                 piece = self.manoir.grille[i][j]
-                rect = pygame.Rect(
-                    j * self.taille_case,
-                    i * self.taille_case,
-                    self.taille_case,
-                    self.taille_case
-                )
+                rect = pygame.Rect(j * self.taille_case, i * self.taille_case, self.taille_case, self.taille_case)
 
-                # Si la case n’a pas encore été utilisée → reste noire
                 if not piece or not piece.get("type"):
                     pygame.draw.rect(self.ecran, self.couleurs["noir"], rect)
-                    pygame.draw.rect(self.ecran, (40, 40, 40), rect, 1)  # léger contour
+                    pygame.draw.rect(self.ecran, (40, 40, 40), rect, 1)
                     continue
 
-                # Sinon, afficher la pièce (sprite ou couleur)
                 sp = self._sprite_pour_type(piece.get("type", ""))
                 if sp:
                     self.ecran.blit(sp, rect.topleft)
@@ -118,7 +80,6 @@ class Vue:
                     pygame.draw.rect(self.ecran, couleur, rect.inflate(-4, -4))
                     pygame.draw.rect(self.ecran, (0, 0, 0), rect, 1)
 
-    # --- affichage du joueur ---
     def afficher_joueur(self):
         rect = pygame.Rect(
             self.joueur["y"] * self.taille_case + 10,
@@ -128,7 +89,6 @@ class Vue:
         )
         pygame.draw.rect(self.ecran, (0, 0, 255), rect)
 
-        # Flèche de direction du joueur
         cx, cy = rect.center
         t = 12
         if self.direction == "haut":
@@ -142,7 +102,6 @@ class Vue:
 
         pygame.draw.polygon(self.ecran, (255, 255, 0), pts)
 
-    # --- affichage du HUD ---
     def afficher_hud(self):
         barre = pygame.Rect(
             0,
@@ -154,7 +113,6 @@ class Vue:
         texte = self.police.render(self.inventaire.afficher(), True, (0, 0, 0))
         self.ecran.blit(texte, (10, self.manoir.lignes * self.taille_case + 20))
 
-    # --- affichage du menu de choix de pièces ---
     def afficher_menu_choix(self, options):
         self.ecran.fill((0, 0, 0))
         y0 = 50
@@ -169,7 +127,6 @@ class Vue:
                 self.ecran.blit(vignette, (40, y0 + i * 80 - 10))
         pygame.display.flip()
 
-    # --- affichage de fin de partie ---
     def afficher_fin(self, message, perdu=False, gagne=False):
         if perdu:
             couleur_fond = self.couleurs["rouge"]
