@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 class Inventaire:
-    def __init__(self, pas=75, or_=0, gemmes=2, cles=0, des=1, bananes=0):
+    def __init__(self, pas=70, or_=0, gemmes=2, cles=0, des=0, bananes=0):
         # consommables
         self.pas = int(pas)
         self.or_ = int(or_)

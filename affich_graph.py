@@ -2,7 +2,7 @@
 import os, glob
 import pygame
 
-# alias pour retrouver les bons sprites d'après le nom de pièce
+# alias sprites
 ALIAS_SPRITES = {
     "serre": "greenhouse",
     "observatoire": "observatory",
@@ -13,20 +13,18 @@ ALIAS_SPRITES = {
     "entrancehall": "entrancehall",
     "antechamber": "antechamber",
 }
-
-# pièces à fond très sombre (leurs cartes sont sombres)
 DARK_BG_TYPES = {"antechamber", "entrancehall"}
 
-# --- PALETTE (fond noir)
-CLR_BG         = (10, 10, 10)     # fond global
-CLR_TILE       = (28, 28, 28)     # fond des cases posées
-CLR_TILE_DARK  = (12, 12, 12)     # fond pour pièces "sombres"
-CLR_GRID       = (90, 90, 90)     # bordure de case
-CLR_DOOR       = (230, 230, 230)  # portes (clair)
-CLR_ARROW      = (255, 230, 0)    # flèche du joueur
-CLR_ARROW_OUT  = (255, 255, 255)  # contour de la flèche
-CLR_HUD_BG     = (22, 22, 22)     # bandeau HUD
-CLR_TEXT       = (240, 240, 240)  # texte clair
+# palette (fond noir)
+CLR_BG         = (10, 10, 10)
+CLR_TILE       = (28, 28, 28)
+CLR_TILE_DARK  = (12, 12, 12)
+CLR_GRID       = (90, 90, 90)
+CLR_DOOR       = (230, 230, 230)
+CLR_ARROW      = (255, 230, 0)
+CLR_ARROW_OUT  = (255, 255, 255)
+CLR_HUD_BG     = (22, 22, 22)
+CLR_TEXT       = (240, 240, 240)
 CLR_SUBTEXT    = (200, 200, 200)
 
 class Vue:
@@ -37,7 +35,16 @@ class Vue:
         self.inventaire = inventaire
         self.dossier_images = dossier_images
 
+        # bandeau HUD + marges autour de la grille
         self.h_hud = 70
+        self.pad_top = 14
+        self.pad_bottom = 10
+        self.pad_left = 14
+        self.pad_right = 14
+
+        # offsets de dessin (calculés à chaque frame)
+        self.offset_x = 0
+        self.offset_y = 0
 
         pygame.font.init()
         self.font = pygame.font.SysFont("Arial", 20)
@@ -50,17 +57,28 @@ class Vue:
         self._charger_images_originaux(self.dossier_images)
         self._rescale_sprites()
 
-    # tailles ------------------------------------------------------------------
+    # -------------------- tailles --------------------
     def _calc_taille_case(self) -> int:
         W, H = self.ecran.get_width(), self.ecran.get_height()
         if getattr(self.manoir, "lignes", 0) <= 0 or getattr(self.manoir, "colonnes", 0) <= 0:
             return 80
-        H_dispo = max(1, H - self.h_hud - 8)
-        t_x = max(1, W // self.manoir.colonnes)
+        # on réserve HUD + paddings vertical
+        vertical_margin = self.h_hud + self.pad_top + self.pad_bottom
+        H_dispo = max(1, H - vertical_margin)
+        t_x = max(1, (W - (self.pad_left + self.pad_right)) // self.manoir.colonnes)
         t_y = max(1, H_dispo // self.manoir.lignes)
         return max(48, min(128, min(t_x, t_y)))
 
-    # sprites ------------------------------------------------------------------
+    def _update_offsets(self):
+        """Centre horizontalement, ajoute la marge haute pour éviter la 'découpe' en haut."""
+        W, H = self.ecran.get_width(), self.ecran.get_height()
+        grid_w = self.manoir.colonnes * self.taille_case
+        # offset horizontal centré (au moins pad_left)
+        self.offset_x = max(self.pad_left, (W - grid_w) // 2)
+        # offset vertical = marge haute
+        self.offset_y = self.pad_top
+
+    # -------------------- sprites --------------------
     @staticmethod
     def _norm(s: str) -> str:
         return "".join(ch.lower() for ch in s if ch.isalnum())
@@ -96,16 +114,16 @@ class Vue:
             if k and k in kk: return surf
         return None
 
-    # rendu --------------------------------------------------------------------
+    # -------------------- rendu --------------------
     def render(self, direction_ouverte: str):
         new_t = self._calc_taille_case()
         if new_t != self.taille_case:
             self.taille_case = new_t
             self._rescale_sprites()
 
-        # fond noir
-        self.ecran.fill(CLR_BG)
+        self._update_offsets()
 
+        self.ecran.fill(CLR_BG)
         self._afficher_grille()
         self._afficher_joueur(direction_ouverte)
         self._afficher_hud()
@@ -113,9 +131,10 @@ class Vue:
 
     def _afficher_grille(self):
         t = self.taille_case
+        ox, oy = self.offset_x, self.offset_y
         for i in range(self.manoir.lignes):
             for j in range(self.manoir.colonnes):
-                rect = pygame.Rect(j*t, i*t, t, t)
+                rect = pygame.Rect(ox + j*t, oy + i*t, t, t)
                 piece = self.manoir.grille[i][j]
                 typ = self._norm(piece["type"])
 
@@ -131,43 +150,44 @@ class Vue:
 
                 portes = piece.get("portes", set())
                 ep = max(6, t//12)
-                if "haut" in portes:   pygame.draw.rect(self.ecran, CLR_DOOR, (j*t + t//2-6, i*t, 12, ep))
-                if "bas" in portes:    pygame.draw.rect(self.ecran, CLR_DOOR, (j*t + t//2-6, i*t + t-ep, 12, ep))
-                if "gauche" in portes: pygame.draw.rect(self.ecran, CLR_DOOR, (j*t, i*t + t//2-6, ep, 12))
-                if "droite" in portes: pygame.draw.rect(self.ecran, CLR_DOOR, (j*t + t-ep, i*t + t//2-6, ep, 12))
+                if "haut" in portes:   pygame.draw.rect(self.ecran, CLR_DOOR, (ox + j*t + t//2-6, oy + i*t, 12, ep))
+                if "bas" in portes:    pygame.draw.rect(self.ecran, CLR_DOOR, (ox + j*t + t//2-6, oy + i*t + t-ep, 12, ep))
+                if "gauche" in portes: pygame.draw.rect(self.ecran, CLR_DOOR, (ox + j*t, oy + i*t + t//2-6, ep, 12))
+                if "droite" in portes: pygame.draw.rect(self.ecran, CLR_DOOR, (ox + j*t + t-ep, oy + i*t + t//2-6, ep, 12))
 
     def _afficher_joueur(self, direction_ouverte):
         """Affiche UNIQUEMENT une petite flèche au centre de la case du joueur."""
         t = self.taille_case
+        ox, oy = self.offset_x, self.offset_y
         x, y = self.joueur["x"], self.joueur["y"]
 
-        # centre de la case
-        cx = y * t + t // 2
-        cy = x * t + t // 2
-        s  = max(12, t // 4)  # taille de la flèche
+        # centre de la case (avec offset)
+        cx = ox + y * t + t // 2
+        cy = oy + x * t + t // 2
+        s  = max(12, t // 4)
 
-        # triangles selon l’orientation
         if direction_ouverte == "haut":
             tri = [(cx, cy - s), (cx - s, cy + s), (cx + s, cy + s)]
         elif direction_ouverte == "bas":
             tri = [(cx, cy + s), (cx - s, cy - s), (cx + s, cy - s)]
         elif direction_ouverte == "gauche":
             tri = [(cx - s, cy), (cx + s, cy - s), (cx + s, cy + s)]
-        else:  # "droite"
+        else:  # droite
             tri = [(cx + s, cy), (cx - s, cy - s), (cx - s, cy + s)]
 
-        # contour blanc (lisible sur fond sombre) puis remplissage jaune
         pygame.draw.polygon(self.ecran, CLR_ARROW_OUT, tri, width=max(2, t//24))
         pygame.draw.polygon(self.ecran, CLR_ARROW, tri)
 
     def _afficher_hud(self):
-        w = self.manoir.colonnes * self.taille_case
-        y = self.manoir.lignes * self.taille_case
-        pygame.draw.rect(self.ecran, CLR_HUD_BG, (0, y, w, self.h_hud), border_radius=18)
+        # HUD pleine largeur en bas de la grille (pas besoin d'offset)
+        W, H = self.ecran.get_size()
+        grid_h = self.manoir.lignes * self.taille_case
+        y = self.offset_y + grid_h
+        pygame.draw.rect(self.ecran, CLR_HUD_BG, (0, y, W, self.h_hud))
         txt = self.font.render(self.inventaire.afficher(), True, CLR_TEXT)
         self.ecran.blit(txt, (16, y + self.h_hud//2 - 10))
 
-    # menu (fond noir ; inventaire 2 colonnes ; cartes)
+    # -------------------- menu --------------------
     def afficher_menu_choix(self, options, inventaire):
         W, H = self.ecran.get_width(), self.ecran.get_height()
         self.ecran.fill(CLR_BG)
@@ -177,7 +197,6 @@ class Vue:
         title = title_font.render("Choose a room to draft", True, CLR_TEXT)
         self.ecran.blit(title, (int(W*0.06), int(H*0.06)))
 
-        # panneau inventaire
         permas = inventaire.liste_permanents()
         left_lines = ["Inventory:"] + (permas if permas else ["(none)"])
         right_lines = [
@@ -200,13 +219,13 @@ class Vue:
         panel_y = int(H*0.14)
         self.ecran.blit(panel, (panel_x, panel_y))
         for i, s in enumerate(left_lines):
-            color = CLR_TEXT if i > 0 else (255, 255, 255)
+            color = CLR_TEXT if i > 0 else (255,255,255)
             self.ecran.blit(info_font.render(s, True, color), (panel_x+8, panel_y+8+i*line_h))
         for i, s in enumerate(right_lines):
             self.ecran.blit(info_font.render(s, True, CLR_SUBTEXT),
                             (panel_x + 8 + box_w_left + 12, panel_y + 8 + i*line_h))
 
-        # cartes ----------------------------------------------------------------
+        # cartes
         margin_x = int(W*0.06); top_y = max(int(H*0.28), panel_y + box_h + 20)
         avail_w = W - 2*margin_x; gap = max(24, int(W*0.04)); frame_pad = 16
         card_w = int((avail_w - 2*gap - 3*frame_pad) / 3)
