@@ -35,29 +35,29 @@ class Vue:
         self.inventaire = inventaire
         self.dossier_images = dossier_images
 
-        # bandeau HUD + marges autour de la grille
-        self.h_hud = 70
-        self.pad_top = 14
-        self.pad_bottom = 10
-        self.pad_left = 14
-        self.pad_right = 14
+        # bandeau HUD( on addiche les gemmes ...) + marges autour de la grille
+        self.h_hud = 70 # hauteur en bas du fénetre 
+        self.pad_top = 14 #hauteur verticale en haut pour ne pas coller le haut de l'écran au bord
+        self.pad_bottom = 10 # marge au dessus du HUD
+        self.pad_left = 14 # marge à gauche de la grille 
+        self.pad_right = 14 # marge à droite de la grille 
 
         # offsets de dessin (calculés à chaque frame)
         self.offset_x = 0
         self.offset_y = 0
 
-        pygame.font.init()
-        self.font = pygame.font.SysFont("Arial", 20)
-        self.font_big = pygame.font.SysFont("Arial", 64, bold=True)
+        pygame.font.init()   #Initialise le module des polices de caractères de Pygame
+        self.font = pygame.font.SysFont("Arial", 20) #Police “normale” pour le HUD, les textes d’info, etc. Taille 20
+        self.font_big = pygame.font.SysFont("Arial", 64, bold=True) #Grande police en gras comme texte de fin
 
-        self.taille_case = self._calc_taille_case()
+        self.taille_case = self._calc_taille_case() #pour calculer la taille d'1 piece en f(nombre de ligend et de colones du manoir)
 
-        self._sprites_src = {}
-        self._sprites = {}
-        self._charger_images_originaux(self.dossier_images)
+        self._sprites_src = {} #mages originales chargées depuis le dossier
+        self._sprites = {} #mêmes images mais redimensionnées à taille_case pour l’affichage.
+        self._charger_images_originaux(self.dossier_images) #charge tout les png et les met dans -sprite_rc
         self._rescale_sprites()
 
-    # -------------------- tailles --------------------
+    #    tailles :choisir automatiquement la taille d’1 case de la grille pour que tout le manoir tienne bien dans la fenêtre
     def _calc_taille_case(self) -> int:
         W, H = self.ecran.get_width(), self.ecran.get_height()
         if getattr(self.manoir, "lignes", 0) <= 0 or getattr(self.manoir, "colonnes", 0) <= 0:
@@ -69,16 +69,15 @@ class Vue:
         t_y = max(1, H_dispo // self.manoir.lignes)
         return max(48, min(128, min(t_x, t_y)))
 
-    def _update_offsets(self):
+    def _update_offsets(self):  #calculer où dessiner la grille dans la fenêtre
         """Centre horizontalement, ajoute la marge haute pour éviter la 'découpe' en haut."""
         W, H = self.ecran.get_width(), self.ecran.get_height()
         grid_w = self.manoir.colonnes * self.taille_case
-        # offset horizontal centré (au moins pad_left)
-        self.offset_x = max(self.pad_left, (W - grid_w) // 2)
-        # offset vertical = marge haute
-        self.offset_y = self.pad_top
+        self.offset_x = max(self.pad_left, (W - grid_w) // 2) # offset horizontal centré (au moins pad_left)
+        self.offset_y = self.pad_top  # offset vertical = marge haute
 
-    # -------------------- sprites --------------------
+# Ensuite on scanne dossier d’images, charge ttes les png, les indexe par un nom nettoyé , et les garde dans self._sprites_src pour qu’ensuite _rescale_sprites() puisse les redimensionner et que _sprite() puisse les afficher sur la grille.
+    # sprites 
     @staticmethod
     def _norm(s: str) -> str:
         return "".join(ch.lower() for ch in s if ch.isalnum())
@@ -114,7 +113,8 @@ class Vue:
             if k and k in kk: return surf
         return None
 
-    # -------------------- rendu --------------------
+    # rendu 
+    #à chaque tour de boucle, on appelle render(...) pour tout redessiner
     def render(self, direction_ouverte: str):
         new_t = self._calc_taille_case()
         if new_t != self.taille_case:
@@ -129,6 +129,7 @@ class Vue:
         self._afficher_hud()
         pygame.display.flip()
 
+#Pour dessiner toute la grille du manoir case par case
     def _afficher_grille(self):
         t = self.taille_case
         ox, oy = self.offset_x, self.offset_y
@@ -154,7 +155,7 @@ class Vue:
                 if "bas" in portes:    pygame.draw.rect(self.ecran, CLR_DOOR, (ox + j*t + t//2-6, oy + i*t + t-ep, 12, ep))
                 if "gauche" in portes: pygame.draw.rect(self.ecran, CLR_DOOR, (ox + j*t, oy + i*t + t//2-6, ep, 12))
                 if "droite" in portes: pygame.draw.rect(self.ecran, CLR_DOOR, (ox + j*t + t-ep, oy + i*t + t//2-6, ep, 12))
-
+#Pour dessiner le joueur, sous forme d’une petite flèche orientée
     def _afficher_joueur(self, direction_ouverte):
         """Affiche UNIQUEMENT une petite flèche au centre de la case du joueur."""
         t = self.taille_case
@@ -178,8 +179,8 @@ class Vue:
         pygame.draw.polygon(self.ecran, CLR_ARROW_OUT, tri, width=max(2, t//24))
         pygame.draw.polygon(self.ecran, CLR_ARROW, tri)
 
+# HUD pleine largeur en bas de la grille 
     def _afficher_hud(self):
-        # HUD pleine largeur en bas de la grille (pas besoin d'offset)
         W, H = self.ecran.get_size()
         grid_h = self.manoir.lignes * self.taille_case
         y = self.offset_y + grid_h
@@ -187,7 +188,8 @@ class Vue:
         txt = self.font.render(self.inventaire.afficher(), True, CLR_TEXT)
         self.ecran.blit(txt, (16, y + self.h_hud//2 - 10))
 
-    # -------------------- menu --------------------
+    # menu 
+    #tt l’écran de “draft” des salles, autrement dit le menu où on choisit 1 des 3 pièces proposées après avoir ouvert une porte
     def afficher_menu_choix(self, options, inventaire):
         W, H = self.ecran.get_width(), self.ecran.get_height()
         self.ecran.fill(CLR_BG)
