@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import random
 
+#Calcule un poids à partir de la rareté d’une pièce
 def _poids_rarete(p):
     # rarete 0..3 -> poids 1, 1/3, 1/9, 1/27
     r = int(p.get("rarete", 0))
     r = max(0, min(3, r))
     return 1.0 / (3 ** r)
 
+#À partir du pool de pièces, construit la liste des pièces posables qui repectent les contraintes
 def _filtre_posable(pool, back_dir, sur_bordure: bool):
     """Pièces posables: doivent avoir une porte vers back_dir et respecter contrainte 'bordure'."""
     out = []
@@ -20,6 +22,7 @@ def _filtre_posable(pool, back_dir, sur_bordure: bool):
         out.append(p)
     return out
 
+#tout le tirage des 3 options de salles
 def tirer_trois(
     pool,
     rng=None,
@@ -30,10 +33,10 @@ def tirer_trois(
     modif_types=None,
 ):
     """Tirage pondéré de 3 options.
-       - filtre posable (porte back_dir + 'bordure')
-       - pondération par rareté
-       - prise en compte éventuelle de modificateurs par couleur / type
-       - si pas de gemmes, garantit ≥1 option coût 0 si possible
+       d'abord filtre posable (porte back_dir + 'bordure')
+       ensuite pondération par rareté
+       puis prise en compte éventuelle de modificateurs par couleur / type
+       et si pas de gemmes, garantit ≥1 option coût 0 si possible
     """
     rng = rng or random.Random()
     cand = _filtre_posable(pool, back_dir, sur_bordure) if back_dir else list(pool)
