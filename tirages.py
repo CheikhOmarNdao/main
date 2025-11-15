@@ -20,10 +20,19 @@ def _filtre_posable(pool, back_dir, sur_bordure: bool):
         out.append(p)
     return out
 
-def tirer_trois(pool, rng=None, back_dir=None, sur_bordure=False, joueur_a_gemmes=True):
+def tirer_trois(
+    pool,
+    rng=None,
+    back_dir=None,
+    sur_bordure=False,
+    joueur_a_gemmes=True,
+    modif_couleurs=None,
+    modif_types=None,
+):
     """Tirage pondéré de 3 options.
        - filtre posable (porte back_dir + 'bordure')
        - pondération par rareté
+       - prise en compte éventuelle de modificateurs par couleur / type
        - si pas de gemmes, garantit ≥1 option coût 0 si possible
     """
     rng = rng or random.Random()
@@ -31,9 +40,27 @@ def tirer_trois(pool, rng=None, back_dir=None, sur_bordure=False, joueur_a_gemme
     if not cand:
         return []
 
-    poids = [_poids_rarete(p) for p in cand]
+    modif_couleurs = modif_couleurs or {}
+    modif_types = modif_types or {}
+
+    poids = []
+    for p in cand:
+        w = _poids_rarete(p)
+
+        # ajustement par couleur (effets de Greenhouse, etc.)
+        couleur = str(p.get("couleur", "")).strip().lower()
+        if couleur in modif_couleurs:
+            w *= float(modif_couleurs[couleur])
+
+        # ajustement par type de pièce (effets de Furnace, etc.)
+        type_norm = str(p.get("type", "")).strip().lower()
+        if type_norm in modif_types:
+            w *= float(modif_types[type_norm])
+
+        poids.append(w)
+
     total = sum(poids) or 1.0
-    probs = [w/total for w in poids]
+    probs = [w / total for w in poids]
 
     def choice():
         x = rng.random()

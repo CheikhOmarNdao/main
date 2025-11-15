@@ -30,6 +30,12 @@ class Inventaire:
             return True
         return False
 
+    def depenser_cles(self, n=1):
+        if self.cles >= n:
+            self.cles -= n
+            return True
+        return False
+
     def depenser_des(self, n=1):
         if self.des >= n:
             self.des -= n

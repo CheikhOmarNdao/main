@@ -6,17 +6,15 @@ from affich_graph import Vue
 from controle import Controleur
 from inventaire import Inventaire
 from manoir import Manoir, OPPOSITE
-from effets import appliquer_effet, Contexte, tirage_objets
+from effets import appliquer_effet, appliquer_effet_entree, Contexte, tirage_objets
 
 POOL = [
-
     # --- Etage / pièces spéciales (hors Entrance / Antechamber) ---
     {"type": "Attic",               "couleur": "rouge",    "rarete": 2, "cout_gemmes": 1, "portes": {"bas"}},
     {"type": "Bedroom",             "couleur": "violette", "rarete": 2, "cout_gemmes": 1, "portes": {"gauche", "droite"}},
     {"type": "Chamber_of_Mirrors",  "couleur": "bleue",    "rarete": 3, "cout_gemmes": 3, "portes": {"haut", "bas", "gauche", "droite"}},
     {"type": "Chamber_of_Mirrors1", "couleur": "bleue",    "rarete": 3, "cout_gemmes": 3, "portes": {"haut", "bas", "gauche", "droite"}},
     {"type": "Closet",              "couleur": "rouge",    "rarete": 1, "cout_gemmes": 0, "portes": {"haut"}},
-
 
     # --- Couleur bleue / neutres ---
     {"type": "Foyer",               "couleur": "bleue",    "rarete": 1, "cout_gemmes": 0, "portes": {"haut", "bas"}},
@@ -28,7 +26,7 @@ POOL = [
     {"type": "Office",              "couleur": "bleue",    "rarete": 2, "cout_gemmes": 1, "portes": {"haut", "bas"}},
     {"type": "Parlor",              "couleur": "bleue",    "rarete": 2, "cout_gemmes": 1, "portes": {"bas"}},
     {"type": "Room_46",             "couleur": "bleue",    "rarete": 1, "cout_gemmes": 0, "portes": {"haut"}},
-   {"type": "Study",               "couleur": "bleue",    "rarete": 1, "cout_gemmes": 0, "portes": {"bas"}},
+    {"type": "Study",               "couleur": "bleue",    "rarete": 1, "cout_gemmes": 0, "portes": {"bas"}},
     {"type": "The_Foundation",      "couleur": "bleue",    "rarete": 3, "cout_gemmes": 2, "portes": {"haut", "bas"}},
     {"type": "The_Pool",            "couleur": "bleue",    "rarete": 3, "cout_gemmes": 2, "portes": {"haut", "bas"}},
     {"type": "Trophy_Room",         "couleur": "bleue",    "rarete": 2, "cout_gemmes": 1, "portes": {"haut", "bas"}},
@@ -71,7 +69,6 @@ def opposite(d):
     return OPPOSITE[d]
 
 
-
 def main():
     pygame.init()
     pygame.display.set_caption("Blue Prince — MVP")
@@ -93,7 +90,8 @@ def main():
     running = True
     while running:
         actions = controleur.handle_events()
-        if actions == "quitter": break
+        if actions == "quitter":
+            break
 
         # --------- MENU CHOIX ---------
         if etat == "choix":
@@ -103,31 +101,40 @@ def main():
             if idx is not None and 0 <= idx < len(manoir.options_courantes):
                 piece = manoir.options_courantes[idx]
                 cout = int(piece.get("cout_gemmes", 0))
-                if cout <= inventaire.gemmes and inventaire.depenser_gemmes(cout):
+
+                # On peut payer le coût avec gemmes + clés (gemmes d'abord, puis clés)
+                total_ressources = inventaire.gemmes + inventaire.cles
+                if cout <= total_ressources:
+                    gem_a_payer = min(cout, inventaire.gemmes)
+                    cle_a_payer = cout - gem_a_payer
+
+                    if gem_a_payer > 0:
+                        inventaire.depenser_gemmes(gem_a_payer)
+                    if cle_a_payer > 0:
+                        inventaire.depenser_cles(cle_a_payer)
+
                     x, y = manoir._case_devant(joueur, direction_ouverte)
                     if manoir.poser_piece(x, y, piece, back_dir=opposite(direction_ouverte)):
                         ctx = Contexte(inventaire, manoir)
                         log1 = appliquer_effet(piece, ctx)
                         log2 = tirage_objets(piece, ctx, rng)
-
                         if log1:
                             print("[EFFET]", log1)
                         if log2:
                             print("[LOOT]", log2)
-
                         etat = "jeu"
                     else:
                         print("[WARN] Pièce non posable (porte retour manquante ?).")
                 else:
-                    print("[WARN] Gemmes insuffisantes.")
+                    print("[WARN] Gemmes/Clés insuffisantes.")
 
             if actions.get("reroll"):
                 if inventaire.depenser_des(1):
-                    manoir.ouvrir(joueur, direction_ouverte, inventaire.gemmes)
-                    print("[LOG] Reroll des options (-1 dé).")
+                    # ouverture possible si au moins une ressource (gemme ou clé)
+                    manoir.ouvrir(joueur, direction_ouverte, inventaire.gemmes + inventaire.cles)
+                    print("[LOG] Reroll des options (–1 dé).")
                 else:
                     print("[WARN] Pas de dé.")
-
             clock.tick(60)
             continue
 
@@ -138,15 +145,29 @@ def main():
         if actions.get("move"):
             d = actions["move"]
             if inventaire.depenser_pas(1):
-                ok = manoir.deplacer(joueur, d)
-                print(f"[MOVE] {d} -> pos={joueur['x'], joueur['y']}")
-                if not ok: print("[WARN] Pas de porte / case non posée / détour obligatoire.")
+                # on passe aussi l'inventaire à deplacer (verrous, etc.)
+                ok = manoir.deplacer(joueur, d, inventaire)
+                print(f"[MOVE] {d} -> pos=({joueur['x']}, {joueur['y']})")
+                if ok:
+                    # Effet éventuel quand on ENTRE dans la nouvelle pièce
+                    piece_actuelle = manoir._piece(joueur["x"], joueur["y"])
+                    ctx = Contexte(inventaire, manoir)
+                    log_entree = appliquer_effet_entree(piece_actuelle, ctx)
+                    if log_entree:
+                        print("[EFFET ENTREE]", log_entree)
 
+                    # Ressources cachées éventuelles sur la case (Patio / Office ...)
+                    log_cache = manoir.ramasser_ressources_case(joueur["x"], joueur["y"], inventaire)
+                    if log_cache:
+                        print("[CACHE]", log_cache)
+                else:
+                    print("[WARN] Pas de porte / case non posée / détour obligatoire / porte verrouillée.")
             else:
                 print("[WARN] Plus de pas.")
 
         if actions.get("ouvrir"):
-            ok = manoir.ouvrir(joueur, direction_ouverte, inventaire.gemmes)
+            # ouverture possible si au moins une ressource (gemme ou clé)
+            ok = manoir.ouvrir(joueur, direction_ouverte, inventaire.gemmes + inventaire.cles)
             if ok and manoir.options_courantes:
                 print(f"[LOG] Ouverture vers {direction_ouverte} -> options: {len(manoir.options_courantes)}")
                 etat = "choix"
@@ -158,19 +179,18 @@ def main():
 
         # victoire / défaites
         if manoir.est_antechamber(joueur["x"], joueur["y"]):
-
             _show_end(ecran, "Victoire ! Projet 4 SYSCOM vous félicite")
             break
-
         if inventaire.pas <= 0:
-            _show_end(ecran, "Défaite : plus de pas."); break
+            _show_end(ecran, "Défaite : plus de pas.")
+            break
         if manoir.aucun_coup_possible(joueur) and inventaire.des <= 0 and inventaire.gemmes <= 0 and inventaire.cles <= 0:
-            _show_end(ecran, "Défaite : aucun coup possible."); break
+            _show_end(ecran, "Défaite : aucun coup possible.")
+            break
 
         clock.tick(60)
 
     pygame.quit()
-
 
 
 def _show_end(ecran, message: str):
@@ -184,5 +204,7 @@ def _show_end(ecran, message: str):
     ecran.blit(surf, (0, 0))
     pygame.display.flip()
     pygame.time.wait(2500)
+
+
 if __name__ == "__main__":
     main()
