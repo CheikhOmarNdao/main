@@ -10,14 +10,14 @@ class Inventaire:
         self.des = int(des)
         self.bananes = int(bananes)
 
-        # permanents (bool)
+        # permanents 
         self.pelle = False
         self.marteau = False
         self.kit_crochetage = False
         self.detecteur_metaux = False
         self.patte_lapin = False
 
-    # ---- dépenses (consommables)
+    #   dépenses (consommables)
     def depenser_pas(self, n=1):
         if self.pas >= n:
             self.pas -= n
@@ -42,7 +42,7 @@ class Inventaire:
             return True
         return False
 
-    # ---- gains (consommables)
+    #    gains (consommables)
     def ajouter_pas(self, n=1): self.pas += n
     def ajouter_or(self, n=1): self.or_ += n
     def ajouter_gemmes(self, n=1): self.gemmes += n
@@ -50,7 +50,7 @@ class Inventaire:
     def ajouter_des(self, n=1): self.des += n
     def ajouter_bananes(self, n=1): self.bananes += n
 
-    # ---- permanents
+    #    permanents
     def donner_permanent(self, nom: str) -> bool:
         nom = (nom or "").strip().lower()
         if nom == "pelle" and not self.pelle:
@@ -74,7 +74,7 @@ class Inventaire:
         if self.detecteur_metaux: lst.append("Metal Detector")
         return lst
 
-    # ---- affichage HUD (consommables à droite)
+    #      affichage HUD 
     def afficher(self):
         return (f"Pas: {self.pas} | Or: {self.or_} | Gemmes: {self.gemmes} | "
                 f"Clés: {self.cles} | Dés: {self.des} | Bananes: {self.bananes}")
