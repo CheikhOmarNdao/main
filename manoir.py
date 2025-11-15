@@ -38,12 +38,12 @@ class Manoir:
         self._poser_fixe(
             self.entrance_x,
             self.entrance_y,
-            "Entrance Hall",      # ou "Entrance_Hall" selon le nom de ton image
+            "Entrance Hall",      
             "bleue",
             portes={"gauche", "droite", "haut"}
         )
 
-        # Antechamber : porte vers le bas uniquement
+        # Antechamber a porte vers le bas uniquement
         self._poser_fixe(
             self.ante_x,
             self.ante_y,
@@ -61,36 +61,36 @@ class Manoir:
         # Options de pièces proposées après une ouverture
         self.options_courantes: List[Piece] = []
 
-        # Contraintes de détour : on interdit de monter tout droit au début
+        # Contraintes de détour ie on interdit de monter tout droit au début
         self.colonne_axe = self.ante_y
         self.detour_oblige = True  # il faut au moins un déplacement horizontal
 
-        # ----- NOUVEAU : pioche finie -----
-        # Copie modifiable du pool : on enlèvera les pièces au fur et à mesure.
-        # (Par sécurité, on exclut les pièces fixes si elles étaient dans le pool.)
+        # pioche finie 
+        # Copie modifiable du pool : on enlèvera les pièces au fur et à mesure
+        # on exclut les pièces fixes si elles étaient dans le pool
         self.pioche: List[Piece] = [
             p for p in self.pool
             if p.get("type") not in ("Entrance Hall", "Antechamber")
         ]
 
-        # ----- NOUVEAU : niveaux de verrouillage des portes -----
-        # Clé : (x, y, direction) -> niveau 0, 1 ou 2
+        # niveaux de verrouillage des portes 
+        # Clé : (x, y, direction) => niveau 0, 1 ou 2
         self.verrous: Dict[Tuple[int, int, Direction], int] = {}
 
-        # ----- NOUVEAU : modificateurs de probas de tirage de pièces -----
-        # utilisés par des effets de pièces (Greenhouse, Furnace, etc.)
+        #  modificateurs de probas de tirage de pièces ---
+        # utilisés par des effets de pièces (Greenhouse, Furnace, etc)
         # facteur multiplicatif (1.0 = pas de changement)
         self.modif_proba_couleurs: Dict[str, float] = {}
         self.modif_proba_types: Dict[str, float] = {}
 
-        # ----- NOUVEAU : ressources cachées dans certaines cases -----
+        # ressources cachées dans certaines cases 
         # (effet Patio / Office : ressources dispersées)
-        # clé : (x, y) -> dict {"or": n, "gemmes": n, "pas": n, ...}
+        # clé : (x, y) => dict {"or": n, "gemmes": n, "pas": n, ..}
         self.ressources_cachees: Dict[Tuple[int, int], Dict[str, int]] = {}
 
-    # ---------- Outils internes ----------
+    #            Outils internes 
 
-    @staticmethod
+    @staticmethod    # pour dire à python y a pas cls y a pas self
     def _delta(direction: Direction) -> Tuple[int, int]:
         return {
             "haut": (-1, 0),
@@ -124,12 +124,12 @@ class Manoir:
             or y == self.colonnes - 1
         )
 
-    # ---------- Règles de mouvement / ouverture ----------
+    #         Règles de mouvement / ouverture 
 
     def _blocage_detour(self, j: Dict[str, int], direction: Direction) -> bool:
         """
-        Bloque temporairement la montée tout droit tant que le détour
-        horizontal imposé n’a pas été réalisé.
+        Bloque la montée tout droit tant que le détour
+        horizontal n'est pas OK
         """
         return (
             self.detour_oblige
@@ -160,9 +160,9 @@ class Manoir:
 
     def deplacer(self, j: Dict[str, int], direction: Direction, inventaire=None) -> bool:
         """
-        Applique effectivement le déplacement si autorisé.
+        Applique effectivement le déplacement si autorisé
         Si un inventaire est fourni, tient compte du niveau de verrouillage
-        de la porte et du kit de crochetage / des clés.
+        de la porte et du kit de crochetage / des clés
         """
         # D’abord, on vérifie qu'il y a bien une porte des deux côtés
         if not self.peut_deplacer(j, direction):
@@ -182,7 +182,6 @@ class Manoir:
                 # Porte niveau 2 : le kit ne marche pas, il faut une clé
                 if not inventaire.depenser_cles(1):
                     return False
-            # niveau 0 : rien de spécial
 
         # Si on arrive ici, on peut effectivement se déplacer
         dx, dy = self._delta(direction)
@@ -211,12 +210,8 @@ class Manoir:
 
     def ouvrir(self, j: Dict[str, int], direction: Direction, ressources_dispo: int) -> bool:
         """
-        Tire et propose des pièces jouables dans la direction indiquée.
-        Utilise maintenant la pioche (pièces restantes) au lieu du pool complet.
-
-        `ressources_dispo` peut représenter, par exemple, le total
-        (gemmes + clés) côté inventaire, pour déterminer si l'on
-        autorise l'apparition de pièces coûteuses.
+        Tire et propose des pièces jouables dans la direction indiquée
+        Utilise maintenant la pioche (pièces restantes) au lieu du pool complet
         """
         if not self.peut_ouvrir(j, direction):
             self.options_courantes = []
@@ -245,7 +240,7 @@ class Manoir:
 
         return bool(self.options_courantes)
 
-    # ---------- Placement de pièce ----------
+    #             Placement de pièce
 
     def ok_placement(self, x: int, y: int) -> bool:
         return self._dans_grille(x, y) and self._piece(x, y)["type"] == "vide"
@@ -258,9 +253,9 @@ class Manoir:
         back_dir: Optional[Direction] = None
     ) -> bool:
         """
-        Place définitivement une pièce choisie sur la grille.
-        Vérifie la présence de la porte de retour back_dir si nécessaire.
-        Enlève aussi cette pièce de la pioche pour éviter de la re-tirer.
+        Place définitivement une pièce choisie sur la grille
+        Vérifie la présence de la porte de retour back_dir si nécessaire
+        Enlève aussi cette pièce de la pioche pour éviter de la re tirer
         """
         if not self.ok_placement(x, y):
             return False
@@ -277,7 +272,6 @@ class Manoir:
         }
 
         # On supprime cette carte de la pioche si elle s'y trouve encore
-        # (on ignore silencieusement si elle n'y est pas).
         try:
             self.pioche.remove(piece)
         except ValueError:
@@ -286,7 +280,7 @@ class Manoir:
         self.options_courantes = []
         return True
 
-    # ---------- Vérifs de blocage ----------
+    #          Vérifs de blocage 
 
     def _voisins(self, x: int, y: int):
         """
@@ -307,7 +301,7 @@ class Manoir:
         Test local :
         - aucun déplacement possible depuis la case du joueur
         - aucune ouverture possible depuis cette même case
-        Utilisé dans la condition de défaite.
+        Utilisé dans la condition de défaite
         """
         # essayer de bouger
         for d, _, _ in self._voisins(j["x"], j["y"]):
@@ -321,19 +315,19 @@ class Manoir:
 
         return True
 
-    # ---------- Objectif ----------
+    #           Objectif 
 
     def est_antechamber(self, x: int, y: int) -> bool:
         return (x, y) == (self.ante_x, self.ante_y)
 
-    # ---------- Niveaux de verrouillage ----------
+    #            Niveaux de verrouillage 
 
     def _tirer_niveau_verrou(self, ligne: int) -> int:
         """
-        Tire un niveau de verrou (0, 1, 2) en fonction de la ligne dans le manoir.
-        - ligne de l'Entrance Hall : toujours 0
-        - ligne de l'Antechamber : toujours 2
-        - lignes intermédiaires : mélange 0/1/2, plus de verrouillage en s'approchant de l'Antechamber.
+        Tire un niveau de verrou (0, 1, 2) en fonction de la ligne dans le manoir
+        *ligne de l'Entrance Hall : toujours 0
+        *ligne de l'Antechamber : toujours 2
+        * lignes intermédiaires : mélange 0/1/2, plus de verrouillage en s'approchant de l'Antechamber
         """
         if ligne == self.entrance_x:
             return 0
@@ -344,15 +338,15 @@ class Manoir:
         denom = max(1, self.entrance_x - self.ante_x)
         ratio = (self.entrance_x - ligne) / denom  # 0 près Entrance, 1 près Antechamber
 
-        # Exemple de paliers simples en fonction de ratio
+        # Exple de paliers simples en fonction de ratio
         if ratio < 1/3:
-            # zone assez proche de l'Entrance → plutôt niveau 0
+            # zone assez proche de l'Entrance =>plutôt niveau 0
             probs = (0.7, 0.3, 0.0)   # (p0, p1, p2)
         elif ratio < 2/3:
             # zone intermédiaire
             probs = (0.3, 0.5, 0.2)
         else:
-            # zone proche de l'Antechamber → plutôt niveau 2
+            # zone proche de l'Antechamber => plutôt niveau 2
             probs = (0.1, 0.4, 0.5)
 
         r = self.rng.random()
@@ -365,10 +359,9 @@ class Manoir:
 
     def niveau_verrou(self, x: int, y: int, direction: Direction) -> int:
         """
-        Renvoie (et initialise au besoin) le niveau de verrouillage de la porte
-        située à partir de (x, y) dans 'direction'.
-
-        Le niveau est commun aux deux côtés de la porte.
+        Renvoie le niveau de verrouillage de la porte
+        située à partir de (x, y) dans 'direction'
+        Le niveau est commun aux 2 côtés de la porte
         """
         key = (x, y, direction)
         if key in self.verrous:
@@ -382,18 +375,18 @@ class Manoir:
             self.verrous[key] = 0
             return 0
 
-        # On choisit une ligne représentative pour le tirage :
+        # On choisit 1 ligne représentative pour le tirage 
         # la plus "haute" des deux (plus proche de l'Antechamber)
         ligne_ref = min(x, nx)
         niveau = self._tirer_niveau_verrou(ligne_ref)
 
-        # On enregistre le niveau pour les deux sens de la porte
+        # On enregistre le niveau pour les 2 sens de la porte
         self.verrous[(x, y, direction)] = niveau
         self.verrous[(nx, ny, OPPOSITE[direction])] = niveau
 
         return niveau
 
-    # ---------- Modificateurs de probas de tirage ----------
+    #     Modificateurs de probas de tirage 
 
     def ajuster_proba_couleur(self, couleur: str, facteur: float):
         """Multiplie la probabilité de tirer des pièces d'une certaine couleur."""
@@ -409,22 +402,22 @@ class Manoir:
             return
         self.modif_proba_types[t] = self.modif_proba_types.get(t, 1.0) * float(facteur)
 
-    # ---------- Gestion de la pioche (ajout de nouvelles pièces) ----------
+    #      Gestion de la pioche (ajout de nouvelles pièces) 
 
     def ajouter_pieces_a_la_pioche(self, nouvelles_pieces: List[Piece]):
         """
         Ajoute des pièces supplémentaires au catalogue/pioche.
-        Utilisé par des pièces spéciales (Chamber of Mirrors, Pool, ...).
+        Utilisé par des pièces spéciales (Chamber of Mirrors, Pool ..)
         """
         for p in nouvelles_pieces or []:
             # On stocke une copie pour éviter les effets de bord
             self.pioche.append(dict(p))
 
-    # ---------- Ressources cachées / dispersées ----------
+    #           Ressources cachées  ou dispersées
 
     def deposer_ressource(self, positions: List[Tuple[int, int]], type_ressource: str, quantite: int):
         """
-        Dépose une ressource (or, gemmes, pas, ...) sur plusieurs cases.
+        Dépose une ressource (or, gemmes ...) sur plusieurs cases
         Utilisé par des pièces comme Patio / Office.
         """
         t = (type_ressource or "").strip().lower()
@@ -439,7 +432,7 @@ class Manoir:
     def ramasser_ressources_case(self, x: int, y: int, inventaire) -> str:
         """
         Si des ressources sont cachées sur (x, y), les donne à l'inventaire
-        et renvoie un petit message de log. Sinon, renvoie "".
+        et renvoie un petit message de log. Sinon, renvoie ""
         """
         data = self.ressources_cachees.pop((x, y), None)
         if not data:
