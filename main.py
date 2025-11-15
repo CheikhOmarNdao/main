@@ -9,14 +9,13 @@ from manoir import Manoir, OPPOSITE
 from effets import appliquer_effet, appliquer_effet_entree, Contexte, tirage_objets
 
 POOL = [
-    # --- Etage / pièces spéciales (hors Entrance / Antechamber) ---
+    # Etage / pièces spéciales (hors Entrance / Antechamber) 
     {"type": "Attic",               "couleur": "rouge",    "rarete": 2, "cout_gemmes": 1, "portes": {"bas"}},
     {"type": "Bedroom",             "couleur": "violette", "rarete": 2, "cout_gemmes": 1, "portes": {"gauche", "droite"}},
     {"type": "Chamber_of_Mirrors",  "couleur": "bleue",    "rarete": 3, "cout_gemmes": 3, "portes": {"haut", "bas", "gauche", "droite"}},
     {"type": "Chamber_of_Mirrors1", "couleur": "bleue",    "rarete": 3, "cout_gemmes": 3, "portes": {"haut", "bas", "gauche", "droite"}},
     {"type": "Closet",              "couleur": "rouge",    "rarete": 1, "cout_gemmes": 0, "portes": {"haut"}},
-
-    # --- Couleur bleue / neutres ---
+    # autres 
     {"type": "Foyer",               "couleur": "bleue",    "rarete": 1, "cout_gemmes": 0, "portes": {"haut", "bas"}},
     {"type": "Freezer",             "couleur": "bleue",    "rarete": 2, "cout_gemmes": 1, "portes": {"haut"}},
     {"type": "Gallery",             "couleur": "bleue",    "rarete": 2, "cout_gemmes": 1, "portes": {"gauche", "droite"}},
@@ -33,27 +32,20 @@ POOL = [
     {"type": "Vault",               "couleur": "bleue",    "rarete": 3, "cout_gemmes": 3, "portes": {"haut", "bas", "gauche", "droite"}},
     {"type": "Vault1",              "couleur": "bleue",    "rarete": 3, "cout_gemmes": 3, "portes": {"haut", "bas", "gauche", "droite"}},
     {"type": "Vault2",              "couleur": "bleue",    "rarete": 3, "cout_gemmes": 3, "portes": {"haut", "bas", "gauche", "droite"}},
-
-    # --- Vertes ---
     {"type": "Greenhouse",          "couleur": "verte",    "rarete": 2, "cout_gemmes": 1, "portes": {"gauche", "droite"}},
-    #{"type": "Morning_Room",        "couleur": "verte",    "rarete": 1, "cout_gemmes": 0, "portes": {"droite"}},
-    {"type": "Patio",               "couleur": "verte",    "rarete": 2, "cout_gemmes": 1, "portes": {"haut", "bas"}},
+    #{"type": "Morning_Room"
+     {"type": "Patio",               "couleur": "verte",    "rarete": 2, "cout_gemmes": 1, "portes": {"haut", "bas"}},
     {"type": "Secret_Garden",       "couleur": "verte",    "rarete": 2, "cout_gemmes": 1, "portes": {"gauche", "droite"}},
     {"type": "Terrace",             "couleur": "verte",    "rarete": 2, "cout_gemmes": 1, "portes": {"bas", "droite"}},
     {"type": "Veranda",             "couleur": "verte",    "rarete": 2, "cout_gemmes": 2, "portes": {"haut", "gauche"}},
-
-    # --- Jaunes ---
+     #autres
     {"type": "Kitchen1",            "couleur": "jaune",    "rarete": 1, "cout_gemmes": 0, "portes": {"haut"}},
     {"type": "Laundry_Room",        "couleur": "jaune",    "rarete": 1, "cout_gemmes": 0, "portes": {"gauche"}},
     {"type": "Mail_Room",           "couleur": "jaune",    "rarete": 2, "cout_gemmes": 1, "portes": {"haut", "bas"}},
     {"type": "Pantry",              "couleur": "jaune",    "rarete": 2, "cout_gemmes": 1, "portes": {"gauche"}},
-
-    # --- Oranges / passages ---
     {"type": "Passageway",          "couleur": "orange",   "rarete": 1, "cout_gemmes": 0, "portes": {"gauche", "droite"}},
     {"type": "Passageway1",         "couleur": "orange",   "rarete": 1, "cout_gemmes": 0, "portes": {"gauche", "droite"}},
     {"type": "The_Armory",          "couleur": "orange",   "rarete": 2, "cout_gemmes": 1, "portes": {"haut", "bas"}},
-
-    # --- Rouges / violettes ---
     {"type": "Lavatory",            "couleur": "rouge",    "rarete": 1, "cout_gemmes": 0, "portes": {"droite"}},
     {"type": "Lavatory1",           "couleur": "rouge",    "rarete": 1, "cout_gemmes": 0, "portes": {"gauche"}},
     {"type": "Nursery",             "couleur": "violette", "rarete": 1, "cout_gemmes": 0, "portes": {"gauche"}},
@@ -93,7 +85,7 @@ def main():
         if actions == "quitter":
             break
 
-        # --------- MENU CHOIX ---------
+        #  MENU CHOIX 
         if etat == "choix":
             vue.afficher_menu_choix(manoir.options_courantes, inventaire)
 
@@ -138,7 +130,7 @@ def main():
             clock.tick(60)
             continue
 
-        # --------- ETAT JEU ---------
+        #     ETAT JEU 
         if actions.get("orient"):
             direction_ouverte = actions["orient"]
 
@@ -156,7 +148,7 @@ def main():
                     if log_entree:
                         print("[EFFET ENTREE]", log_entree)
 
-                    # Ressources cachées éventuelles sur la case (Patio / Office ...)
+                    # Ressources cachées éventuelles sur la case (Patio / Office ..)
                     log_cache = manoir.ramasser_ressources_case(joueur["x"], joueur["y"], inventaire)
                     if log_cache:
                         print("[CACHE]", log_cache)
@@ -174,7 +166,7 @@ def main():
             else:
                 print("[WARN] Impossible d’ouvrir (case non vide / hors grille / détour / aucune pièce posable).")
 
-        # rendu & HUD
+        # rendu et HUD
         vue.render(direction_ouverte)
 
         # victoire / défaites
@@ -182,28 +174,133 @@ def main():
             _show_end(ecran, "Victoire ! Projet 4 SYSCOM vous félicite")
             break
         if inventaire.pas <= 0:
-            _show_end(ecran, "Défaite : plus de pas.")
+            _show_end(ecran, "Défaite : pas=0 Projet 4 SYSCOM vous invite à une autre partie")
+            i=0
+            while i<10000000:  # pour gagner du temps pour lire 
+                  i+=1
             break
         if manoir.aucun_coup_possible(joueur) and inventaire.des <= 0 and inventaire.gemmes <= 0 and inventaire.cles <= 0:
-            _show_end(ecran, "Défaite : aucun coup possible.")
+            _show_end(ecran, "Défaite : aucun coup possible")
             break
 
-        clock.tick(60)
+        clock.tick(60)   #60 FPS
 
     pygame.quit()
 
 
 def _show_end(ecran, message: str):
+    import os
+    import random
+    import pygame
+
+   
     pygame.display.set_caption("Blue Prince — Fin")
-    surf = pygame.Surface(ecran.get_size())
-    surf.fill((10, 10, 10))
-    font = pygame.font.SysFont("Arial", 48, bold=True)
-    txt = font.render(message, True, (255, 255, 255))
-    rect = txt.get_rect(center=(surf.get_width() // 2, surf.get_height() // 2))
-    surf.blit(txt, rect)
-    ecran.blit(surf, (0, 0))
-    pygame.display.flip()
-    pygame.time.wait(2500)
+
+    W, H = ecran.get_size()
+    clock = pygame.time.Clock()
+
+    # --- 1) extinction d'une grille 5x9 style "manoir" ---
+    rows, cols = 5, 9
+    cell_w = W // cols
+    cell_h = H // rows
+    all_cells = [(i, j) for i in range(rows) for j in range(cols)]
+    random.shuffle(all_cells)
+    lit_cells = set(all_cells)
+
+    # --- 2) chute du joueur (un petit cercle qui tombe) ---
+    player_x = W // 2
+    player_y = H // 3
+    player_r = max(10, W // 50)
+    player_vy = H // 120
+
+    # --- 3) texte final en fondu ---
+    title_text = "Vous n’étiez pas le Prince Bleu…"
+    subtitle_text = message
+    title_font = pygame.font.SysFont("Arial", 42, bold=True)
+    subtitle_font = pygame.font.SysFont("Arial", 26)
+
+    alpha = 0
+    alpha_step = 4
+    phase = 0      # 0 = extinction, 1 = chute, 2 = fade texte, 3 = pause
+    phase_timer = 0
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        ecran.fill((0, 0, 0))
+
+        # PHASE 0 : extinction cellule par cellule
+        if phase == 0:
+            for _ in range(4):
+                if all_cells:
+                    cell = all_cells.pop()
+                    if cell in lit_cells:
+                        lit_cells.remove(cell)
+
+            for i in range(rows):
+                for j in range(cols):
+                    x = j * cell_w
+                    y = i * cell_h
+                    if (i, j) in lit_cells:
+                        col = (40, 40, 80)
+                    else:
+                        col = (5, 5, 10)
+                    pygame.draw.rect(ecran, col, (x, y, cell_w + 1, cell_h + 1))
+
+            if not lit_cells:
+                phase = 1
+
+        # PHASE 1 : chute du joueur
+        elif phase == 1:
+            ecran.fill((0, 0, 0))
+            pygame.draw.circle(ecran, (220, 220, 255), (player_x, int(player_y)), player_r)
+            player_y += player_vy
+            if player_y - player_r > H + 20:
+                phase = 2
+
+        # PHASE 2 : texte en fondu
+        elif phase == 2:
+            ecran.fill((0, 0, 0))
+
+            if alpha < 255:
+                alpha = min(255, alpha + alpha_step)
+
+            title_surf = title_font.render(title_text, True, (255, 255, 255)).convert_alpha()
+            subtitle_surf = subtitle_font.render(subtitle_text, True, (200, 200, 200)).convert_alpha()
+            title_surf.set_alpha(alpha)
+            subtitle_surf.set_alpha(alpha)
+
+            rect_title = title_surf.get_rect(center=(W // 2, H // 2 - 20))
+            rect_sub = subtitle_surf.get_rect(center=(W // 2, H // 2 + 30))
+
+            ecran.blit(title_surf, rect_title)
+            ecran.blit(subtitle_surf, rect_sub)
+
+            if alpha >= 255:
+                phase_timer += clock.get_time()
+                if phase_timer > 2500:
+                    phase = 3
+                    phase_timer = 0
+
+        # PHASE 3 : écran figé quelques secondes
+        elif phase == 3:
+            ecran.fill((0, 0, 0))
+            title_surf = title_font.render(title_text, True, (255, 255, 255))
+            subtitle_surf = subtitle_font.render(subtitle_text, True, (200, 200, 200))
+            rect_title = title_surf.get_rect(center=(W // 2, H // 2 - 20))
+            rect_sub = subtitle_surf.get_rect(center=(W // 2, H // 2 + 30))
+            ecran.blit(title_surf, rect_title)
+            ecran.blit(subtitle_surf, rect_sub)
+
+            phase_timer += clock.get_time()
+            if phase_timer > 4000:
+                running = False
+
+        pygame.display.flip()
+        clock.tick(60)
 
 
 if __name__ == "__main__":
