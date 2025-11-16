@@ -175,7 +175,7 @@ def main():
             _show_end(ecran, "Victoire ! Projet 4 SYSCOM vous félicite", True)
             break
         if inventaire.pas <= 0:
-            _show_end(ecran, "Défaite : pas=0 Projet 4 SYSCOM vous invite à une autre partie", False)
+            _show_end(ecran, "Défaite : Projet 4 SYSCOM vous invite à une autre partie", False)
             i=0
             while i<10000000:  # pour gagner du temps pour lire 
                   i+=1
@@ -200,7 +200,7 @@ def _show_end(ecran, message: str, victoire: bool):
     W, H = ecran.get_size()
     clock = pygame.time.Clock()
 
-    # --- 1) extinction d'une grille 5x9 style "manoir" ---
+    #extinction d'une grille 5x9 style "manoir" ---
     rows, cols = 5, 9
     cell_w = W // cols
     cell_h = H // rows
@@ -208,13 +208,13 @@ def _show_end(ecran, message: str, victoire: bool):
     random.shuffle(all_cells)
     lit_cells = set(all_cells)
 
-    # --- 2) chute du joueur (un petit cercle qui tombe) ---
+    #chute du joueur (un petit cercle qui tombe) ---
     player_x = W // 2
     player_y = H // 3
     player_r = max(10, W // 50)
     player_vy = H // 120
 
-    # --- 3) texte final en fondu ---
+    # texte final en fondu 
     if victoire:
         title_text = "Vous étiez le Prince Bleu !"
     else:
