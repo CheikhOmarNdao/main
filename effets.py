@@ -16,9 +16,7 @@ class Contexte:
 def _norm(n: str) -> str:
     return "".join(ch.lower() for ch in str(n) if ch.isalnum())
 
-# ---------------------------------------------------------------------
-# Modificateurs globaux pour les loots (Veranda, Maid's Chamber, ...)
-# ---------------------------------------------------------------------
+# Modificateurs globaux pour les loots (Veranda, Maid's Chamber...)
 LOOT_MODIFIERS = {
     "food": 1.0,
     "or": 1.0,
@@ -33,12 +31,9 @@ def _mult_loot(key: str, factor: float):
     if key in LOOT_MODIFIERS:
         LOOT_MODIFIERS[key] *= float(factor)
 
-
-# ---------------------------------------------------------------------
 # Effets immédiats quand on POSE la pièce
-# ---------------------------------------------------------------------
 
-# ---- Effets de base
+# Effets de base
 def _effet_serre(piece: Piece, ctx: Contexte) -> str:
     ctx.inventaire.ajouter_pas(5)
     return "Serre : +5 pas"
@@ -59,7 +54,7 @@ def _effet_observatoire(piece: Piece, ctx: Contexte) -> str:
     ctx.inventaire.ajouter_cles(1)
     return "Observatoire : +1 clé"
 
-# ---- Effets de magasins (pièces jaunes)
+#Effets de magasins (pièces jaunes)
 def _effet_kitchen1(piece: Piece, ctx: Contexte) -> str:
     """
     Kitchen1 (jaune) : magasin simple
@@ -116,12 +111,12 @@ def _effet_pantry(piece: Piece, ctx: Contexte) -> str:
         return "Pantry : -1 or, +3 pas"
     return "Pantry : pas assez d’or"
 
-# ---- Pièce qui donne / retire des ressources quand on la TIRE (Weight Room)
+#Pièce qui donne / retire des ressources quand on la TIRE (Weight Room)
 def _effet_weightroom(piece: Piece, ctx: Contexte) -> str:
     """
     Weight Room :
-      - 50% : bon entraînement → +5 pas
-      - 50% : blessure → -3 pas si possible
+      - 50% : bon entraînement =>+5 pas
+      - 50% : blessure => -3 pas si possible
     """
     inv = ctx.inventaire
     r = random.random()
@@ -133,7 +128,7 @@ def _effet_weightroom(piece: Piece, ctx: Contexte) -> str:
             return "Weight Room : -3 pas (blessure)"
         return "Weight Room : rien (pas assez de pas pour en perdre)"
 
-# ---- Pièces qui dispersent des ressources dans le manoir (Patio / Office)
+#  Pièces qui dispersent des ressources dans le manoir (Patio / Office)
 def _effet_patio(piece: Piece, ctx: Contexte) -> str:
     """
     Patio :
@@ -162,7 +157,7 @@ def _effet_office(piece: Piece, ctx: Contexte) -> str:
     m.deposer_ressource(positions, "gemmes", 1)
     return "Office : disperse 2 gemmes cachées dans le manoir"
 
-# ---- Pièces qui modifient la probabilité de TIRER certaines pièces
+#Pièces qui modifient la probabilité de TIRER certaines pièces
 def _effet_greenhouse(piece: Piece, ctx: Contexte) -> str:
     """
     Greenhouse :
@@ -174,13 +169,11 @@ def _effet_greenhouse(piece: Piece, ctx: Contexte) -> str:
     m.ajuster_proba_couleur("rouge", 0.8)
     return "Greenhouse : booste les pièces vertes, réduit un peu les rouges"
 
-# (Fournaise est déjà gérée plus haut, en mixant +1 dé et proba rouges)
-
-# ---- Pièces qui modifient la probabilité de trouver certains OBJETS (loots)
+#Pièces qui modifient la probabilité de trouver certains OBJETS (loots)
 def _effet_veranda(piece: Piece, ctx: Contexte) -> str:
     """
     Veranda :
-      - augmente les chances de trouver or et gemmes dans les loots.
+      - augmente les chances de trouver or et gemmes dans les loots
     """
     _mult_loot("or", 1.4)
     _mult_loot("gemme", 1.6)
@@ -188,7 +181,7 @@ def _effet_veranda(piece: Piece, ctx: Contexte) -> str:
 
 def _effet_maidschamber(piece: Piece, ctx: Contexte) -> str:
     """
-    Maid's Chamber (pas forcément dans le pool, mais prêt si tu l'ajoutes) :
+    Maid's Chamber:
       - augmente un peu la nourriture
       - diminue légèrement les objets permanents
     """
@@ -196,7 +189,7 @@ def _effet_maidschamber(piece: Piece, ctx: Contexte) -> str:
     _mult_loot("permanent", 0.8)
     return "Maid's Chamber : plus de nourriture, moins d'objets permanents"
 
-# ---- Pièces qui ajoutent des salles au catalogue (Chamber of Mirrors, Pool)
+# Pièces qui ajoutent des salles au catalogue (Chamber of Mirrors, Pool)
 def _effet_chamberofmirrors(piece: Piece, ctx: Contexte) -> str:
     """
     Chamber of Mirrors :
@@ -229,9 +222,8 @@ def _effet_pool(piece: Piece, ctx: Contexte) -> str:
     m.ajouter_pieces_a_la_pioche(extras)
     return "Pool : ajoute des pièces supplémentaires au catalogue"
 
-# ---------------------------------------------------------------------
 # Table des effets à la POSE de la pièce
-# ---------------------------------------------------------------------
+
 EFFETS_PAR_TYPE = {
     "serre": _effet_serre,
     "fournaise": _effet_fournaise,
@@ -268,18 +260,17 @@ def appliquer_effet(piece: Piece, ctx: Contexte) -> str:
     return f(piece, ctx) if f else ""
 
 
-# ---------------------------------------------------------------------
 # Effets déclenchés lorsqu'on ENTRE dans certaines pièces
-# ---------------------------------------------------------------------
+
 
 def _effet_bedroom_entree(piece: Piece, ctx: Contexte) -> str:
     """
-    Effet spécial de la pièce Bedroom lorsqu'on entre dedans.
+    Effet spécial de la pièce Bedroom lorsqu'on entre dedans
 
-    Exemple :
-      - 40% : repos, on gagne des pas
-      - 30% : mauvais rêve, on perd des pas si possible
-      - 30% : on trouve une gemme
+    Exple:
+      40% : repos, on gagne des pas
+       30% : mauvais rêve, on perd des pas si possible
+     30% : on trouve une gemme
     """
     inv = ctx.inventaire
     r = random.random()
@@ -297,7 +288,7 @@ def _effet_bedroom_entree(piece: Piece, ctx: Contexte) -> str:
 
 EFFETS_ENTREE_PAR_TYPE = {
     "bedroom": _effet_bedroom_entree,
-    # tu peux ajouter d'autres pièces ici plus tard
+    
 }
 
 def appliquer_effet_entree(piece: Piece, ctx: Contexte) -> str:
@@ -307,10 +298,8 @@ def appliquer_effet_entree(piece: Piece, ctx: Contexte) -> str:
     f = EFFETS_ENTREE_PAR_TYPE.get(_norm(piece.get("type", "")))
     return f(piece, ctx) if f else ""
 
-
-# ---------------------------------------------------------------------
 # Tirage d’objets à la pose d’une salle
-# ---------------------------------------------------------------------
+
 def _ajuster_probas_par_couleur(base, couleur: str):
     c = (couleur or "").strip().lower()
     p = dict(base)
@@ -359,7 +348,7 @@ def tirage_objets(piece: Piece, ctx: Contexte, rng=None) -> str:
     p = _ajuster_probas_par_couleur(p, str(piece.get("couleur", "")))
     p = _ajuster_probas_par_permanents(p, inv)
 
-    # prise en compte des modifs globales (Veranda / Maid's Chamber, etc.)
+    
     for key in ("food", "or", "gemme", "cle", "de", "permanent"):
         if key in p:
             p[key] *= LOOT_MODIFIERS.get(key, 1.0)
