@@ -105,7 +105,7 @@ Voici quelques images illustrant le jeu
 
 ## **Auteurs**
 
-Projet réalisé dans le cadre de POO – Promo 2025.
+Projet réalisé dans le cadre de POO – Promo 2025 Groupe 4 SYSCOM.
 
 ---
 
