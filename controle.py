@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""Module de contrôle des entrées clavier pour le jeu Blue Prince
+
+Ce module définit la classe `Controleur` qui interroge la file d'événements
+pygame et la traduit en un dictionnaire d'actions compréhensible par la
+boucle de jeu (déplacement, orientation, ouverture de porte, choix de pièce,
+relance, etc.).
+"""
+
+
 import pygame
 
 class Controleur:
