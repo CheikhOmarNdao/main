@@ -79,8 +79,8 @@ catalogue.py       > liste complète des pièces et paramètres
 ---
 
 ## **Captures d’écran**
-Voici quelques images illustrant le jeu
 ```
+Voici quelques images illustrant le jeu
 ![Écran de victoire](gagne.jpg)
 ![Écran de défaite](perdu.jpg)
 ![Ecran accueil ](accueil.jpg)
