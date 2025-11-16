@@ -86,7 +86,7 @@ Voici quelques images illustrant le jeu
 ![Ecran accueil ](accueil.jpg)
 ![ Ecran courant](imcourant.jpg)
 ![ Ecran choix](choix.jpg)
-
+```
 
 ---
 
