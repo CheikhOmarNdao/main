@@ -170,17 +170,18 @@ def main():
         vue.render(direction_ouverte)
 
         # victoire / défaites
+        #joueur["x"], joueur["y"] = manoir.ante_x, manoir.ante_y  # pour gagner directement
         if manoir.est_antechamber(joueur["x"], joueur["y"]):
-            _show_end(ecran, "Victoire ! Projet 4 SYSCOM vous félicite")
+            _show_end(ecran, "Victoire ! Projet 4 SYSCOM vous félicite", True)
             break
         if inventaire.pas <= 0:
-            _show_end(ecran, "Défaite : pas=0 Projet 4 SYSCOM vous invite à une autre partie")
+            _show_end(ecran, "Défaite : pas=0 Projet 4 SYSCOM vous invite à une autre partie", False)
             i=0
             while i<10000000:  # pour gagner du temps pour lire 
                   i+=1
             break
         if manoir.aucun_coup_possible(joueur) and inventaire.des <= 0 and inventaire.gemmes <= 0 and inventaire.cles <= 0:
-            _show_end(ecran, "Défaite : aucun coup possible")
+            _show_end(ecran, "Défaite : aucun coup possible", False)
             break
 
         clock.tick(60)   #60 FPS
@@ -188,7 +189,7 @@ def main():
     pygame.quit()
 
 
-def _show_end(ecran, message: str):
+def _show_end(ecran, message: str, victoire: bool):
     import os
     import random
     import pygame
@@ -214,7 +215,11 @@ def _show_end(ecran, message: str):
     player_vy = H // 120
 
     # --- 3) texte final en fondu ---
-    title_text = "Vous n’étiez pas le Prince Bleu…"
+    if victoire:
+        title_text = "Vous étiez le Prince Bleu !"
+    else:
+        title_text = "Vous n’étiez pas le Prince Bleu…"
+
     subtitle_text = message
     title_font = pygame.font.SysFont("Arial", 42, bold=True)
     subtitle_font = pygame.font.SysFont("Arial", 26)
