@@ -79,14 +79,17 @@ catalogue.py       > liste complète des pièces et paramètres
 ---
 
 ## **Captures d’écran**
-```
-Voici quelques images illustrant le jeu
-![Écran de victoire](gagne.jpg)
-![Écran de défaite](perdu.jpg)
-![Ecran accueil ](accueil.jpg)
-![ Ecran courant](imcourant.jpg)
-![ Ecran choix](choix.jpg)
-```
+## Captures d’écran
+
+Voici quelques images illustrant le jeu :
+
+![Écran de victoire](captures/gagne.jpg)  
+![Écran de défaite]((captures/perdu.jpg)  
+![Écran d’accueil]((captures/accueil.jpg)  
+![Écran courant]((captures/imcourant.jpg)  
+![Écran de choix]((captures/choix.jpg)
+
+
 
 ---
 
