@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+"""Gestion des effets de salles et des loots pour le jeu Blue Prince.
+
+Ce module définit :
+- la classe Contexte reliant Inventaire et Manoir,
+- les modificateurs globaux de loots (LOOT_MODIFIERS),
+- les effets appliqués lorsqu'une pièce est POSÉE,
+- les effets appliqués lorsqu'on ENTRE dans certaines pièces,
+- le tirage d'objets (tirage_objets) en fonction de la couleur de la salle,
+  de l'inventaire du joueur et des modificateurs de loots.
+"""
+
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Callable

@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
 
+"""Gestion de l'inventaire du joueur pour le jeu Blue Prince.
+
+Ce module définit la classe `Inventaire`, qui regroupe :
+- les ressources consommables (pas, or, gemmes, clés, dés, bananes),
+- les objets permanents (pelle, marteau, kit de crochetage, etc.),
+- les méthodes pour dépenser/ajouter ces ressources
+  et pour afficher un résumé dans le HUD.
+"""
+
 class Inventaire:
     def __init__(self, pas=70, or_=0, gemmes=2, cles=0, des=0, bananes=0):
         # consommables

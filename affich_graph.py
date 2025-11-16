@@ -1,4 +1,20 @@
 # -*- coding: utf-8 -*-
+
+"""Module d’affichage graphique (Vue) du jeu Blue Prince avec pygame.
+
+Ce module gère :
+- le rendu graphique du manoir (grille, pièces, portes),
+- l’affichage du joueur sous forme de flèche orientée,
+- le HUD (inventaire : pas, or, gemmes, clés, dés, bananes),
+- le menu de choix des salles (draft de 3 pièces après ouverture d’une porte),
+- le chargement et le redimensionnement des sprites depuis le dossier `image_pieces`.
+
+La classe principale `Vue` ne contient aucune logique de jeu :
+elle se contente d’afficher l’état fourni par `Manoir`, `Inventaire` et `joueur`.
+"""
+
+
+
 import os, glob
 import pygame
 

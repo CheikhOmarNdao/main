@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+
+"""Module principal du projet Blue Prince.
+
+Initialise Pygame, crée le manoir, l'inventaire, la vue et le contrôleur,
+puis lance la boucle de jeu et gère les écrans de fin (victoire / défaite).
+"""
+
 import random
 import pygame
 

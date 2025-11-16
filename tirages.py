@@ -1,8 +1,24 @@
 # -*- coding: utf-8 -*-
+"""Module de tirage des pièces (salles) pour le jeu Blue Prince.
+
+Ce module gère :
+- le calcul de poids à partir de la rareté d'une pièce,
+- le filtrage des pièces posables (porte de retour + contrainte 'bordure'),
+- le tirage pondéré de 3 options de salles (`tirer_trois`), en tenant compte :
+  * de la rareté,
+  * d’éventuels modificateurs par couleur / type,
+  * et du fait que le joueur ait (ou non) des gemmes/clés pour acheter des pièces chères.
+"""
+
 import random
 
 #Calcule un poids à partir de la rareté d’une pièce
 def _poids_rarete(p):
+    """Calcule un poids de tirage à partir de la rareté de la pièce.
+
+    rarete 0..3 -> poids 1, 1/3, 1/9, 1/27
+    Plus la pièce est rare, plus son poids est faible (donc moins elle sort souvent).
+    """
     # rarete 0..3 -> poids 1, 1/3, 1/9, 1/27
     r = int(p.get("rarete", 0))
     r = max(0, min(3, r))
@@ -10,6 +26,12 @@ def _poids_rarete(p):
 
 #À partir du pool de pièces, construit la liste des pièces posables qui repectent les contraintes
 def _filtre_posable(pool, back_dir, sur_bordure: bool):
+    """Filtre les pièces posables depuis une direction donnée.
+
+    Une pièce est posable si :
+    - elle possède une porte de retour vers `back_dir`,
+    - et, si elle a la contrainte 'bordure', la case cible est bien sur la bordure.
+    """
     """Pièces posables: doivent avoir une porte vers back_dir et respecter contrainte 'bordure'."""
     out = []
     for p in pool:
@@ -32,6 +54,18 @@ def tirer_trois(
     modif_couleurs=None,
     modif_types=None,
 ):
+    """Tire jusqu'à trois pièces depuis le pool en tenant compte de plusieurs contraintes.
+
+    Étapes :
+    - filtre les pièces posables (porte de retour + contrainte 'bordure'),
+    - calcule un poids par rareté puis applique des modificateurs par couleur / type,
+    - effectue un tirage pondéré de 3 options,
+    - si `joueur_a_gemmes` est False, essaie de garantir au moins 1 pièce coût 0 si possible.
+
+    Retour
+    list[dict]
+        Liste (max 3) de pièces tirées (copies des dictionnaires d'origine).
+    """
     """Tirage pondéré de 3 options.
        d'abord filtre posable (porte back_dir + 'bordure')
        ensuite pondération par rareté

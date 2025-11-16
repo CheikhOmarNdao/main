@@ -1,4 +1,18 @@
 # -*- coding: utf-8 -*-
+
+"""Logique du manoir et de la grille pour le jeu Blue Prince.
+Ce module définit :
+- les types auxiliaires (Direction, Piece) et le dictionnaire OPPOSITE,
+- la classe `Manoir`, qui gère :
+  * la grille 5x9 (pièces, portes, bordures),
+  * la position du joueur,
+  * les ouvertures de portes et le tirage de nouvelles salles,
+  * les verrous de portes (niveaux 0/1/2),
+  * les ressources cachées (or, gemmes, pas…),
+  * les modificateurs de probabilité de tirage de certaines pièces.
+"""
+
+
 from typing import List, Dict, Tuple, Optional
 import random
 from tirages import tirer_trois

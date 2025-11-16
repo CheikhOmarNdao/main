@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 catalogue.py — Chargement/normalisation de la pioche (pool) de pièces
-
 """
 
 from __future__ import annotations
